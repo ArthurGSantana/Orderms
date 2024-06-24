@@ -10,5 +10,5 @@ import java.util.Optional;
 
 @Repository
 public interface OrderRepository extends MongoRepository<Order, Long> {
-    Page<Order> findAllByCustomerId(Long customerId, PageRequest of);
+    Page<Order> findAllByCustomerId(Long customerId, PageRequest pageRequest);
 }
