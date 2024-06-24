@@ -11,6 +11,8 @@ import prog.microservice.orderms.model.dto.OrderResponse;
 import prog.microservice.orderms.model.dto.PaginationResponse;
 import prog.microservice.orderms.service.OrderService;
 
+import java.util.Map;
+
 @RestController
 public class OrderController {
     private final OrderService orderService;
@@ -26,9 +28,14 @@ public class OrderController {
             @PathVariable("customerId") Long customerId
     ) {
         var pageResponse = orderService.findAllByCustomerId(customerId, PageRequest.of(page, size));
+        var totalOnOrders = orderService.findTotalOnOrdersByCustomerId(customerId);
 
         return ResponseEntity.ok(
-                new ApiResponse<>(pageResponse.getContent(), PaginationResponse.fromPage(pageResponse))
+                new ApiResponse<>(
+                        Map.of("totalOnOrders", totalOnOrders),
+                        pageResponse.getContent(),
+                        PaginationResponse.fromPage(pageResponse)
+                )
         );
     }
 }

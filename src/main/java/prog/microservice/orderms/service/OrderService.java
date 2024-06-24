@@ -2,6 +2,8 @@ package prog.microservice.orderms.service;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
 import prog.microservice.orderms.entity.Order;
 import prog.microservice.orderms.entity.OrderItem;
@@ -11,19 +13,35 @@ import prog.microservice.orderms.repository.OrderRepository;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
+
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 @Service
 public class OrderService {
     private final OrderRepository orderRepository;
+    private final MongoTemplate mongoTemplate;
 
-    public OrderService(OrderRepository orderRepository) {
+    public OrderService(OrderRepository orderRepository, MongoTemplate mongoTemplate) {
         this.orderRepository = orderRepository;
+        this.mongoTemplate = mongoTemplate;
     }
 
     public Page<OrderResponse> findAllByCustomerId(Long customerId, PageRequest pageRequest) {
         var orders = orderRepository.findAllByCustomerId(customerId, pageRequest);
 
         return orders.map(OrderResponse::fromEntity);
+    }
+
+    public BigDecimal findTotalOnOrdersByCustomerId(Long customerId) {
+        var aggregations = newAggregation(
+                match(Criteria.where("customerId").is(customerId)),
+                group().sum("total").as("total")
+        );
+
+        var result = mongoTemplate.aggregate(aggregations, Order.class, OrderResponse.class);
+
+        return Objects.requireNonNull(result.getUniqueMappedResult()).total();
     }
 
     public void save(OrderCreatedEvent event) {
