@@ -1,9 +1,12 @@
 package prog.microservice.orderms.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import prog.microservice.orderms.entity.Order;
 import prog.microservice.orderms.entity.OrderItem;
 import prog.microservice.orderms.listener.dto.OrderCreatedEvent;
+import prog.microservice.orderms.model.dto.OrderResponse;
 import prog.microservice.orderms.repository.OrderRepository;
 
 import java.math.BigDecimal;
@@ -15,6 +18,12 @@ public class OrderService {
 
     public OrderService(OrderRepository orderRepository) {
         this.orderRepository = orderRepository;
+    }
+
+    public Page<OrderResponse> findAllByCustomerId(Long customerId, PageRequest pageRequest) {
+        var orders = orderRepository.findAllByCustomerId(customerId, pageRequest);
+
+        return orders.map(OrderResponse::fromEntity);
     }
 
     public void save(OrderCreatedEvent event) {
